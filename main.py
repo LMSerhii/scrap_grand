@@ -121,14 +121,6 @@ def get_data(url):
                         }
                     )
 
-
-                    # print(f"{product_name}\n"
-                    #       f"{product_price}\n"
-                    #       f"{product_description}\n"
-                    #       f"{url_to_card_images}\n"
-                    #       f"{product_characteristics}\n"
-                    #       f"{product_videos}\n\n\n")
-
                 except Exception:
                     continue
 
@@ -138,9 +130,28 @@ def get_data(url):
         json.dump(all_data, file, indent=4, ensure_ascii=False)
 
 
+def download_img():
+    """  """
+    with open("all_data.json", "r") as file:
+        res = json.load(file)
+
+    for item in res:
+        category = res.get(item)
+        for cards in category:
+            url_to_card = cards['url_to_card']
+            dir_name = url_to_card.split("/")[-2]
+
+            if not os.path.exists(f"data/{dir_name}"):
+                os.mkdir(f"data/{dir_name}")
+
+            url_to_card_images = cards['url_to_card_images']
+
+
+
 def main():
 
-    get_data(url="https://www.grand.ua-shop.in/catalog/")
+    # get_data(url="https://www.grand.ua-shop.in/catalog/")
+    download_img()
 
 
 if __name__ == '__main__':
