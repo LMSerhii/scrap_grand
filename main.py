@@ -1,3 +1,6 @@
+import json
+import os.path
+
 import requests
 
 from bs4 import BeautifulSoup
@@ -11,6 +14,7 @@ headers = {
 
 def get_data(url):
     """  """
+    all_data = {}
     with requests.Session() as session:
 
         response = session.get(url=url, headers=headers)
@@ -19,16 +23,29 @@ def get_data(url):
 
         catalog = soup.find("div", class_="content-wrapper").find_all("a", class_="item")
 
-        for subcategory in catalog[:2]:
+        for subcategory in catalog:
             url_to_subcategory = f"https://www.grand.ua-shop.in{subcategory.get('href')}"
+
+            name_category = url_to_subcategory.split("/")[-2]
+
+            if not os.path.exists(f"data/{name_category}"):
+                os.mkdir(f"data/{name_category}")
+
             response = session.get(url=url_to_subcategory, headers=headers)
 
             soup = BeautifulSoup(response.text, 'lxml')
             cards = soup.select("a.img")
+
+            all_cards = []
             for card in cards:
 
                 try:
                     url_to_card = f"https://www.grand.ua-shop.in{card.get('href')}"
+
+                    name_card = url_to_card.split("/")[-2]
+
+                    if not os.path.exists(f"data/{name_category}/{name_card}"):
+                        os.mkdir(f"data/{name_category}/{name_card}")
 
                     response = session.get(url=url_to_card, headers=headers)
 
@@ -64,6 +81,21 @@ def get_data(url):
                         product_characteristics = None
 
                     try:
+                        trs = container.\
+                            find("div", class_="tabs-container").\
+                            find("div", class_="characteristics").\
+                            find("tbody").find_all("tr")
+
+                        characteristics = {}
+                        for tr in trs:
+                            key = tr.find("td", class_="type").find("span").text.strip()
+                            value = tr.find("td", class_="value").text.strip()
+                            characteristics[key] = value
+
+                    except Exception:
+                        characteristics = None
+
+                    try:
                         videos = container. \
                             find("div", class_="tabs-container"). \
                             find("div", class_="videos"). \
@@ -73,15 +105,37 @@ def get_data(url):
                     except Exception:
                         product_videos = None
 
-                    print(f"{product_name}\n"
-                          f"{product_price}\n"
-                          f"{product_description}\n"
-                          f"{url_to_card_images}\n"
-                          f"{product_characteristics}\n"
-                          f"{product_videos}\n\n\n")
+                    prom_description = f"{product_name}\n{product_description}\n{product_characteristics}"
+
+                    with open(f"data/{name_category}/{name_card}/{name_card}.txt", "w") as file:
+                        file.write(prom_description)
+
+                    all_cards.append(
+                        {
+                            "product_name": product_name,
+                            "url_to_card": url_to_card,
+                            "product_price": product_price,
+                            "url_to_card_images": url_to_card_images,
+                            "url_to_card_videos": product_videos,
+                            "characteristics": characteristics
+                        }
+                    )
+
+
+                    # print(f"{product_name}\n"
+                    #       f"{product_price}\n"
+                    #       f"{product_description}\n"
+                    #       f"{url_to_card_images}\n"
+                    #       f"{product_characteristics}\n"
+                    #       f"{product_videos}\n\n\n")
 
                 except Exception:
                     continue
+
+            all_data[name_category] = all_cards
+
+    with open("all_data.json", "w", encoding="utf-8") as file:
+        json.dump(all_data, file, indent=4, ensure_ascii=False)
 
 
 def main():
