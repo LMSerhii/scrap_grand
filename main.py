@@ -15,6 +15,10 @@ headers = {
 def get_data(url):
     """  """
     all_data = {}
+
+    if not os.path.exists(f"data"):
+        os.mkdir(f"data")
+
     with requests.Session() as session:
 
         response = session.get(url=url, headers=headers)
@@ -37,6 +41,7 @@ def get_data(url):
             cards = soup.select("a.img")
 
             all_cards = []
+            count = 0
             for card in cards:
 
                 try:
@@ -55,6 +60,8 @@ def get_data(url):
 
                     try:
                         product_name = container.find("h1", id="pagetitle").text.strip()
+                        if " у фірмовому магазині" in product_name:
+                            product_name = product_name.replace(" у фірмовому магазині", "")
                     except Exception:
                         product_name = None
 
@@ -121,6 +128,8 @@ def get_data(url):
                         }
                     )
 
+                    count += 1
+                    print(f"#{count}/{len(cards)} in {name_category}")
                 except Exception:
                     continue
 
@@ -150,8 +159,8 @@ def download_img():
 
 def main():
 
-    # get_data(url="https://www.grand.ua-shop.in/catalog/")
-    download_img()
+    get_data(url="https://www.grand.ua-shop.in/catalog/")
+    # download_img()
 
 
 if __name__ == '__main__':
