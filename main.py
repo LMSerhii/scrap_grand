@@ -143,24 +143,37 @@ def download_img():
     """  """
     with open("all_data.json", "r") as file:
         res = json.load(file)
+    with requests.Session() as session:
+        for item in res:
+            category = res.get(item)
+            for cards in category[:1]:
+                url_to_card = cards['url_to_card']
+                dir_name = url_to_card.split("/")[-2]
 
-    for item in res:
-        category = res.get(item)
-        for cards in category:
-            url_to_card = cards['url_to_card']
-            dir_name = url_to_card.split("/")[-2]
+                if not os.path.exists(f"data/{dir_name}"):
+                    os.mkdir(f"data/{dir_name}")
 
-            if not os.path.exists(f"data/{dir_name}"):
-                os.mkdir(f"data/{dir_name}")
+                url_to_card_images = cards['url_to_card_images']
 
-            url_to_card_images = cards['url_to_card_images']
+                print(len(url_to_card_images))
+
+                # for index, url_to_card_images in enumerate(url_to_card_images):
 
 
-
+                    # card_name = url_to_card_images.split("/")[-2]
+                    #
+                    # if not os.path.exists(f"data/{dir_name}/{card_name}"):
+                    #     os.mkdir(f"data/{dir_name}/{card_name}")
+                    #
+                    # response = session.get(url=url_to_card_images, headers=headers)
+                    # with open(f"data/{dir_name}/{card_name}/{index}.png", "wb") as file:
+                    #     file.write(response.content)
+                    #
+                    # print(f"#{index + 1}/{len(url_to_card_images)} in {dir_name} is completed")
 def main():
 
-    get_data(url="https://www.grand.ua-shop.in/catalog/")
-    # download_img()
+    # get_data(url="https://www.grand.ua-shop.in/catalog/")
+    download_img()
 
 
 if __name__ == '__main__':
