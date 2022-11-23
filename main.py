@@ -114,7 +114,7 @@ def get_data(url):
 
                     prom_description = f"{product_name}\n{product_description}\n{product_characteristics}"
 
-                    with open(f"data/{name_category}/{name_card}/{name_card}.txt", "w") as file:
+                    with open(f"data/{name_category}/{name_card}/{name_card}.txt", "w", encoding="utf-8") as file:
                         file.write(prom_description)
 
                     all_cards.append(
@@ -130,9 +130,10 @@ def get_data(url):
 
                     count += 1
                     print(f"#{count}/{len(cards)} in {name_category}")
-                except Exception:
+                except Exception as ex:
+                    print("Something wrong ...")
+                    print(ex)
                     continue
-
             all_data[name_category] = all_cards
 
     with open("all_data.json", "w", encoding="utf-8") as file:
@@ -141,35 +142,32 @@ def get_data(url):
 
 def download_img():
     """  """
-    with open("all_data.json", "r") as file:
+    with open("all_data.json", "r", encoding="utf-8") as file:
         res = json.load(file)
+
     with requests.Session() as session:
-        for item in res:
-            category = res.get(item)
-            for cards in category[:1]:
-                url_to_card = cards['url_to_card']
-                dir_name = url_to_card.split("/")[-2]
 
-                if not os.path.exists(f"data/{dir_name}"):
-                    os.mkdir(f"data/{dir_name}")
+        for k, v in res.items():
 
-                url_to_card_images = cards['url_to_card_images']
+            if not os.path.exists(f"data/{k}"):
+                os.mkdir(f"data/{k}")
 
-                print(len(url_to_card_images))
+            for card in v:
+                url_to_card_images = card['url_to_card_images']
+                title_name = card['url_to_card'].split("/")[-2]
 
-                # for index, url_to_card_images in enumerate(url_to_card_images):
+                if not os.path.exists(f"data/{k}/{title_name}"):
+                    os.mkdir(f"data/{k}/{title_name}")
+
+                for index, url_to_card_image in enumerate(url_to_card_images):
+
+                    response = session.get(url=url_to_card_image, headers=headers)
+                    with open(f"data/{k}/{title_name}/{index}.png", "wb") as file:
+                        file.write(response.content)
+
+                    print(f"{index + 1}/{len(url_to_card_images)} in {title_name}")
 
 
-                    # card_name = url_to_card_images.split("/")[-2]
-                    #
-                    # if not os.path.exists(f"data/{dir_name}/{card_name}"):
-                    #     os.mkdir(f"data/{dir_name}/{card_name}")
-                    #
-                    # response = session.get(url=url_to_card_images, headers=headers)
-                    # with open(f"data/{dir_name}/{card_name}/{index}.png", "wb") as file:
-                    #     file.write(response.content)
-                    #
-                    # print(f"#{index + 1}/{len(url_to_card_images)} in {dir_name} is completed")
 def main():
 
     # get_data(url="https://www.grand.ua-shop.in/catalog/")
